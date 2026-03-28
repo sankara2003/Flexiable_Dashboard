@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { TrendingUp, TrendingDown, RefreshCw, Sparkles, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, Sparkles, DollarSign, IndianRupee } from 'lucide-react';
 import { generateStockData, generateSpendingData, generatePortfolioHistory } from '../../data/mockData';
 import { generateInsight } from '../../utils/aiInsights';
 
@@ -65,7 +65,7 @@ const FinanceWidget = () => {
     <div className="widget-inner finance-widget">
       <div className="widget-header">
         <div className="widget-title-group">
-          <DollarSign size={18} className="widget-icon finance-icon" />
+          <IndianRupee size={18} className="widget-icon finance-icon" />
           <h3>Finance</h3>
         </div>
         <div className="widget-actions">

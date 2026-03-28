@@ -134,8 +134,8 @@ export const mockNewsArticles = [
 
 // Weather mock data
 export const mockWeatherData = {
-  city: 'San Francisco',
-  country: 'US',
+  city: 'Chennai',
+  country: 'IN',
   temp: 18,
   feelsLike: 16,
   condition: 'Partly Cloudy',
