@@ -11,7 +11,7 @@ import {
 } from '../data/mockData'; // adjust path if your mockData file is elsewhere
 
 const OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 
 
 // ─── Internal OpenRouter caller ───────────────────────────────────────────────
