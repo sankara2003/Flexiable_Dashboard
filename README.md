@@ -16,7 +16,7 @@ A modern, extensible dashboard with drag-and-drop widgets, persistent layouts, l
 ### Installation
 
 ```bash
-git clone https://github.com/sankara2003/Flexiable_Dashboard.git
+git clone https://github.com/sankara2003/Flexiable_Dashboard_Opt.git
 cd Flexiable_Dashboard
 npm install
 npm start
