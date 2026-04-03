@@ -1,6 +1,5 @@
 // AI Insights Generator
 // Uses OpenRouter API — auto-loads insights for all domains on init with real mock data
-
 import {
   generateStockData,
   generateSpendingData,
@@ -11,7 +10,7 @@ import {
 } from '../data/mockData'; // adjust path if your mockData file is elsewhere
 
 const OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
 
 
 // ─── Internal OpenRouter caller ───────────────────────────────────────────────
@@ -122,34 +121,6 @@ export const generateInsight = async (domain, data) => {
   } catch {
     return getFallbackInsight(domain, data);
   }
-};
-
-// ─── Auto-load all domain insights on app init ────────────────────────────────
-// Call once on mount. Returns { finance, health, weather, calendar }
-// All 4 requests fire in parallel via Promise.allSettled.
-//
-// Usage in a component:
-//   const [insights, setInsights] = useState({});
-//   useEffect(() => {
-//     loadAllInsights().then(setInsights);
-//   }, []);
-
-export const loadAllInsights = async () => {
-  const domainData = buildDomainData();
-  const domains = ['finance', 'health', 'weather', 'calendar'];
-
-  const results = await Promise.allSettled(
-    domains.map(domain => generateInsight(domain, domainData[domain]))
-  );
-
-  return Object.fromEntries(
-    domains.map((domain, i) => [
-      domain,
-      results[i].status === 'fulfilled'
-        ? results[i].value
-        : getFallbackInsight(domain, domainData[domain]),
-    ])
-  );
 };
 
 // ─── Fallbacks ─────────────────────────────────────────────────────────────────

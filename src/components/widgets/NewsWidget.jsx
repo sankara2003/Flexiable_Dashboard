@@ -1,98 +1,141 @@
-import React, { useState, useEffect } from 'react';
-import { Newspaper, TrendingUp, ExternalLink, Sparkles, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { Newspaper, TrendingUp, ExternalLink, Sparkles } from 'lucide-react';
 import { mockNewsArticles } from '../../data/mockData';
 import { generateInsight } from '../../utils/aiInsights';
+import { afterPaint } from '../../utils/afterPaint';
 
 const CATEGORIES = ['All', 'Technology', 'Finance', 'Health', 'Science', 'World'];
-
-const categoryColors = {
-  Technology: '#6366f1',
-  Finance: '#10b981',
-  Health: '#ec4899',
-  Science: '#f59e0b',
-  World: '#3b82f6',
+const CAT_COLORS  = {
+  Technology: '#6366f1', Finance: '#10b981',
+  Health: '#ec4899', Science: '#f59e0b', World: '#3b82f6',
 };
+const TRENDING_COUNT = mockNewsArticles.filter((a) => a.trending).length;
 
-const NewsWidget = () => {
-  const [articles, setArticles] = useState(mockNewsArticles);
-  const [filter, setFilter] = useState('All');
-  const [insight, setInsight] = useState('');
+const NewsWidget = memo(() => {
+  const [filter,   setFilter]   = useState('All');
+  const [insight,  setInsight]  = useState('');
   const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
-    const categories = [...new Set(mockNewsArticles.map(a => a.category))];
-    generateInsight('news', { categories, trendingCount: mockNewsArticles.filter(a => a.trending).length }).then(setInsight);
+    const categories = [...new Set(mockNewsArticles.map((a) => a.category))];
+    afterPaint(() => generateInsight('news', { categories, trendingCount: TRENDING_COUNT }).then(setInsight));
   }, []);
 
-  const filtered = filter === 'All' ? articles : articles.filter(a => a.category === filter);
+  const filtered = useMemo(
+    () => (filter === 'All' ? mockNewsArticles : mockNewsArticles.filter((a) => a.category === filter)),
+    [filter]
+  );
+
+  const toggleExpanded = useCallback((id) => setExpanded((prev) => (prev === id ? null : id)), []);
 
   return (
-    <div className="widget-inner news-widget">
-      <div className="widget-header">
-        <div className="widget-title-group">
-          <Newspaper size={18} className="widget-icon news-icon" />
-          <h3>News</h3>
+    <div className="flex flex-col h-full p-[14px] gap-[10px] overflow-hidden">
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-[7px]">
+          <Newspaper size={18} className="text-[var(--accent-blue)] opacity-90" aria-hidden="true" />
+          <h3 className="font-display text-[0.9rem] font-bold tracking-[-0.01em] text-[var(--text-primary)]">News</h3>
         </div>
-        <div className="widget-actions">
-          <span className="trending-badge">
-            <TrendingUp size={11} /> {articles.filter(a => a.trending).length} Trending
-          </span>
-        </div>
+        <span
+          className="flex items-center gap-1 text-[0.68rem] font-semibold text-[var(--accent-rose)]
+                     bg-[rgba(236,72,153,0.1)] px-2 py-[3px] rounded-full"
+          aria-label={`${TRENDING_COUNT} trending articles`}
+        >
+          <TrendingUp size={11} aria-hidden="true" /> {TRENDING_COUNT} Trending
+        </span>
       </div>
 
+      {/* AI insight */}
       {insight && (
-        <div className="ai-insight news-insight">
-          <Sparkles size={12} />
+        <div
+          className="flex items-start gap-[7px] px-[10px] py-2 rounded-lg flex-shrink-0 animate-fade-in
+                     text-[0.72rem] leading-[1.4] text-[var(--text-secondary)]
+                     bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.15)]"
+          role="note"
+        >
+          <Sparkles size={12} className="text-[var(--accent-blue)] flex-shrink-0 mt-[1px]" aria-hidden="true" />
           <span>{insight}</span>
         </div>
       )}
 
-      <div className="category-filters">
-        {CATEGORIES.map(cat => (
+      {/* Category filters */}
+      <nav className="flex gap-[5px] flex-wrap flex-shrink-0" role="tablist" aria-label="Filter by category">
+        {CATEGORIES.map((cat) => (
           <button
             key={cat}
-            className={`cat-btn ${filter === cat ? 'active' : ''}`}
+            role="tab"
+            aria-selected={filter === cat}
+            className={
+              'px-[10px] py-[3px] rounded-full text-[0.68rem] font-medium transition-all duration-150 ' +
+              'bg-[var(--surface-raised)] border border-[var(--border)] ' +
+              (filter === cat && cat !== 'All'
+                ? ''   /* color/border-color applied via inline style below */
+                : filter === cat
+                  ? 'text-[var(--accent-blue)] border-[var(--accent-blue)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]')
+            }
             onClick={() => setFilter(cat)}
-            style={filter === cat && cat !== 'All' ? { borderColor: categoryColors[cat], color: categoryColors[cat] } : {}}
+            style={filter === cat && cat !== 'All' ? { color: CAT_COLORS[cat], borderColor: CAT_COLORS[cat] } : {}}
           >
             {cat}
           </button>
         ))}
-      </div>
+      </nav>
 
-      <div className="news-list">
-        {filtered.map(article => (
-          <div
+      {/* Article list */}
+      <div className="flex-1 overflow-y-auto flex flex-col gap-1" role="feed" aria-label="News articles">
+        {filtered.map((article) => (
+          <article
             key={article.id}
-            className={`news-item ${expanded === article.id ? 'expanded' : ''}`}
-            onClick={() => setExpanded(expanded === article.id ? null : article.id)}
+            className={
+              'px-[11px] py-[9px] rounded-lg cursor-pointer transition-all duration-150 ' +
+              'bg-[var(--surface-raised)] border ' +
+              (expanded === article.id
+                ? 'border-[rgba(59,130,246,0.3)]'
+                : 'border-[var(--border)] hover:border-[var(--border-hover)]')
+            }
+            onClick={() => toggleExpanded(article.id)}
+            aria-expanded={expanded === article.id}
           >
-            <div className="news-item-header">
-              <div className="news-meta">
-                <span className="news-category" style={{ color: categoryColors[article.category] || '#888' }}>
-                  {article.category}
-                </span>
-                {article.trending && <span className="trending-pill">🔥 Trending</span>}
+            <div className="flex justify-between items-center mb-1">
+              <div className="flex items-center gap-[6px]">
+                <span
+                  className="text-[0.65rem] font-bold uppercase tracking-[0.05em]"
+                  style={{ color: CAT_COLORS[article.category] ?? '#888' }}
+                >{article.category}</span>
+                {article.trending && (
+                  <span className="text-[0.62rem] text-[var(--accent-rose)]" aria-label="Trending">🔥 Trending</span>
+                )}
               </div>
-              <span className="news-time">{article.time}</span>
+              <span className="text-[0.62rem] text-[var(--text-muted)]">{article.time}</span>
             </div>
-            <h4 className="news-title">{article.title}</h4>
+            <h4 className="text-[0.78rem] font-medium text-[var(--text-primary)] leading-[1.35]">{article.title}</h4>
+
             {expanded === article.id && (
-              <div className="news-expanded">
-                <p className="news-summary">{article.summary}</p>
-                <div className="news-footer">
-                  <span className="news-source">{article.source}</span>
-                  <a href={article.url} className="read-more" onClick={e => e.stopPropagation()}>
-                    Read more <ExternalLink size={11} />
+              <div className="mt-2 border-t border-[var(--border)] pt-2">
+                <p className="text-[0.73rem] text-[var(--text-secondary)] leading-[1.5] mb-2">{article.summary}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-[0.65rem] text-[var(--text-muted)] italic">{article.source}</span>
+                  <a
+                    href={article.url}
+                    className="flex items-center gap-[3px] text-[0.68rem] text-[var(--accent-blue)] font-medium"
+                    onClick={(e) => e.stopPropagation()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Read full article: ${article.title}`}
+                  >
+                    Read more <ExternalLink size={11} aria-hidden="true" />
                   </a>
                 </div>
               </div>
             )}
-          </div>
+          </article>
         ))}
       </div>
     </div>
   );
-};
+});
 
+NewsWidget.displayName = 'NewsWidget';
 export default NewsWidget;
